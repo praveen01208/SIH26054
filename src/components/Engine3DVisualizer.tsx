@@ -64,7 +64,6 @@ function createCarbonFiberTexture(): THREE.CanvasTexture {
       ctx.fillStyle = isEven ? '#1e293b' : '#090d16';
       ctx.fillRect(x, y, size, size);
 
-      // Diagonal weave sheen
       ctx.strokeStyle = isEven ? '#334155' : '#1e293b';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
@@ -88,10 +87,10 @@ function createExhaustHeatTintTexture(): THREE.CanvasTexture {
   const ctx = canvas.getContext('2d')!;
 
   const gradient = ctx.createLinearGradient(0, 0, 256, 0);
-  gradient.addColorStop(0, '#38bdf8'); // Blue temper color at weld
-  gradient.addColorStop(0.2, '#818cf8'); // Purple
-  gradient.addColorStop(0.4, '#f59e0b'); // Straw yellow
-  gradient.addColorStop(0.7, '#475569'); // Raw stainless
+  gradient.addColorStop(0, '#38bdf8');
+  gradient.addColorStop(0.2, '#818cf8');
+  gradient.addColorStop(0.4, '#f59e0b');
+  gradient.addColorStop(0.7, '#475569');
   gradient.addColorStop(1.0, '#334155');
 
   ctx.fillStyle = gradient;
@@ -136,7 +135,7 @@ export const Engine3DVisualizer: React.FC = () => {
   const airIntakeParticlesRef = useRef<THREE.Points | null>(null);
   const engineMountGroupRef = useRef<THREE.Group | null>(null);
 
-  // References for live telemetry to avoid recreating scene
+  // References for live telemetry
   const telemetryRef = useRef(currentTelemetry);
   const faultsRef = useRef(faults);
   const throttleRef = useRef(throttle);
@@ -194,31 +193,25 @@ export const Engine3DVisualizer: React.FC = () => {
     const ambientLight = new THREE.AmbientLight(0xe0f2fe, 0.85);
     scene.add(ambientLight);
 
-    // Key Overhead Blue/Cyan Light
     const keyLight = new THREE.DirectionalLight(0x38bdf8, 3.2);
     keyLight.position.set(8, 14, 8);
     keyLight.castShadow = true;
-    keyLight.shadow.mapSize.width = 2048;
-    keyLight.shadow.mapSize.height = 2048;
-    keyLight.shadow.bias = -0.0001;
+    keyLight.shadow.mapSize.width = 1024;
+    keyLight.shadow.mapSize.height = 1024;
     scene.add(keyLight);
 
-    // Warm Turbine/Exhaust Rim Light
     const rimLight = new THREE.DirectionalLight(0xf97316, 2.4);
     rimLight.position.set(-10, 4, -8);
     scene.add(rimLight);
 
-    // Ground Uplight (Hangar Floor Reflection)
     const groundLight = new THREE.DirectionalLight(0x0284c7, 1.2);
     groundLight.position.set(0, -8, 0);
     scene.add(groundLight);
 
-    // Master Engine Group
     const engineGroup = new THREE.Group();
     engineGroupRef.current = engineGroup;
     scene.add(engineGroup);
 
-    // Aerospace Hangar Grid Floor
     const gridHelper = new THREE.GridHelper(18, 36, 0x00f0ff, 0x0f172a);
     gridHelper.position.y = -2.1;
     scene.add(gridHelper);
@@ -247,7 +240,6 @@ export const Engine3DVisualizer: React.FC = () => {
       const arm = new THREE.Mesh(armGeo, trussMat);
       mountGroup.add(arm);
 
-      // Vibration Damping Rubber Isolator Puck
       const isolatorGeo = new THREE.CylinderGeometry(0.18, 0.18, 0.2, 16);
       const isolatorMat = new THREE.MeshStandardMaterial({ color: 0x020617, roughness: 0.9 });
       const isolator = new THREE.Mesh(isolatorGeo, isolatorMat);
@@ -257,8 +249,7 @@ export const Engine3DVisualizer: React.FC = () => {
     });
     engineGroup.add(mountGroup);
 
-    // --- 5. DETAILED DUAL-HALF SPLIT CRANKCASE (Rotax 914 Spec) ---
-    // Cast Aluminum Magnesium alloy with center split flange seam and bolt pattern
+    // --- 5. DETAILED DUAL-HALF SPLIT CRANKCASE ---
     const crankcaseLeftGeo = new THREE.BoxGeometry(1.15, 1.6, 3.8);
     const caseMat = new THREE.MeshStandardMaterial({
       color: 0x1e293b,
@@ -279,13 +270,11 @@ export const Engine3DVisualizer: React.FC = () => {
     caseRight.receiveShadow = true;
     engineGroup.add(caseRight);
 
-    // Center Split Seam Flange with Machine Stud Bolts
     const splitFlangeGeo = new THREE.BoxGeometry(0.1, 1.7, 3.9);
     const splitFlangeMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.95, roughness: 0.15 });
     const splitFlange = new THREE.Mesh(splitFlangeGeo, splitFlangeMat);
     engineGroup.add(splitFlange);
 
-    // Perimeter Crankcase Hex Bolts
     for (let z = -1.8; z <= 1.8; z += 0.45) {
       for (const y of [-0.75, 0.75]) {
         const boltGeo = new THREE.CylinderGeometry(0.05, 0.05, 0.15, 6);
@@ -297,7 +286,6 @@ export const Engine3DVisualizer: React.FC = () => {
       }
     }
 
-    // Cast Lower Oil Sump with Cooling Heatsink Fins
     const sumpGeo = new THREE.BoxGeometry(1.9, 0.75, 3.2);
     const sumpMat = new THREE.MeshStandardMaterial({
       color: 0x0b1320,
@@ -308,7 +296,6 @@ export const Engine3DVisualizer: React.FC = () => {
     sump.position.y = -1.15;
     engineGroup.add(sump);
 
-    // Sump Heatsink Fins
     for (let f = -1.4; f <= 1.4; f += 0.28) {
       const finGeo = new THREE.BoxGeometry(1.85, 0.15, 0.04);
       const finMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.9 });
@@ -317,7 +304,6 @@ export const Engine3DVisualizer: React.FC = () => {
       engineGroup.add(fin);
     }
 
-    // Oil Filter Assembly with Pressure Sensor Tap (Front Right)
     const filterGeo = new THREE.CylinderGeometry(0.36, 0.36, 0.85, 24);
     const filterMat = new THREE.MeshStandardMaterial({
       color: 0x0284c7,
@@ -330,7 +316,7 @@ export const Engine3DVisualizer: React.FC = () => {
     filter.rotation.z = Math.PI / 3.5;
     engineGroup.add(filter);
 
-    // --- 6. FOUR BOXER CYLINDERS (Dual-Plug, CNC Finned, Fuel Injected) ---
+    // --- 6. FOUR BOXER CYLINDERS ---
     const cylinderHeads: THREE.Mesh[] = [];
     const cylinderSleeves: THREE.Mesh[] = [];
     const pistons: THREE.Mesh[] = [];
@@ -351,7 +337,6 @@ export const Engine3DVisualizer: React.FC = () => {
       const cylGroup = new THREE.Group();
       cylGroup.position.set(cyl.x * 0.45, cyl.y, cyl.z);
 
-      // Cast Iron Cylinder Barrel Sleeve
       const sleeveGeo = new THREE.CylinderGeometry(0.62, 0.62, 1.55, 32);
       const sleeveMat = new THREE.MeshStandardMaterial({
         color: 0x334155,
@@ -364,7 +349,6 @@ export const Engine3DVisualizer: React.FC = () => {
       cylGroup.add(sleeve);
       cylinderSleeves.push(sleeve);
 
-      // High-Density CNC Machined Cooling Fins (12 razor-thin fins per cylinder)
       for (let fin = -0.7; fin <= 0.7; fin += 0.12) {
         const finGeo = new THREE.CylinderGeometry(0.85, 0.85, 0.025, 32);
         const finMat = new THREE.MeshStandardMaterial({
@@ -379,7 +363,6 @@ export const Engine3DVisualizer: React.FC = () => {
         cylGroup.add(finMesh);
       }
 
-      // Cylinder Head & Cast Rocker Valve Cover (Stamped Aerospace Quality)
       const headGeo = new THREE.BoxGeometry(1.15, 0.95, 1.15);
       const headMat = new THREE.MeshStandardMaterial({
         color: 0x00f0ff,
@@ -395,7 +378,6 @@ export const Engine3DVisualizer: React.FC = () => {
       cylGroup.add(head);
       cylinderHeads.push(head);
 
-      // Dual Spark Plugs (Rotax Redundant Dual-Ignition)
       for (const plugOffset of [-0.25, 0.25]) {
         const plugGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.55, 16);
         const plugMat = new THREE.MeshStandardMaterial({
@@ -410,7 +392,6 @@ export const Engine3DVisualizer: React.FC = () => {
         cylGroup.add(plug);
         sparkPlugs.push(plug);
 
-        // High Voltage Silicone Ignition Wire
         const wireCurve = new THREE.QuadraticBezierCurve3(
           new THREE.Vector3(cyl.dir * 1.85, 0.35, plugOffset),
           new THREE.Vector3(cyl.dir * 1.2, 1.1, plugOffset * 1.5),
@@ -422,7 +403,6 @@ export const Engine3DVisualizer: React.FC = () => {
         engineGroup.add(wire);
       }
 
-      // Bosch Electronic Fuel Injector Body on Intake Port
       const injectorGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.45, 16);
       const injectorMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, metalness: 0.9, roughness: 0.1 });
       const injector = new THREE.Mesh(injectorGeo, injectorMat);
@@ -430,13 +410,11 @@ export const Engine3DVisualizer: React.FC = () => {
       injector.rotation.x = Math.PI / 4;
       cylGroup.add(injector);
 
-      // Internal Combustion Chamber Ignition Light
       const flashLight = new THREE.PointLight(0xff6600, 0, 4);
       flashLight.position.set(cyl.dir * 0.9, 0, 0);
       cylGroup.add(flashLight);
       combustionFlashes.push(flashLight);
 
-      // Forged Aluminum Piston Crown & Skirt (with 3 Piston Rings)
       const pistonGeo = new THREE.CylinderGeometry(0.52, 0.52, 0.6, 24);
       const pistonMat = new THREE.MeshStandardMaterial({
         color: 0xcfd8dc,
@@ -449,7 +427,6 @@ export const Engine3DVisualizer: React.FC = () => {
       cylGroup.add(piston);
       pistons.push(piston);
 
-      // Forged H-Beam Connecting Rod
       const rodGeo = new THREE.BoxGeometry(0.14, 0.95, 0.22);
       const rodMat = new THREE.MeshStandardMaterial({ color: 0x78909c, metalness: 0.95, roughness: 0.15 });
       const rod = new THREE.Mesh(rodGeo, rodMat);
@@ -458,7 +435,6 @@ export const Engine3DVisualizer: React.FC = () => {
       cylGroup.add(rod);
       conRods.push(rod);
 
-      // Mandrel-Bent 321 Stainless Exhaust Header with Weld Seams & Heat Tint
       const exStart = new THREE.Vector3(cyl.dir * 1.15, -0.25, 0.3);
       const exMid = new THREE.Vector3(cyl.dir * 1.7, -0.85, -0.7);
       const exEnd = new THREE.Vector3(cyl.dir * 0.4, -0.85, -2.25);
@@ -476,7 +452,6 @@ export const Engine3DVisualizer: React.FC = () => {
       engineGroup.add(exhaustTube);
       exhaustRunners.push(exhaustTube);
 
-      // Intake Runner Tube with Blue Silicone Couplers
       const inStart = new THREE.Vector3(0, 1.35, -0.1);
       const inMid = new THREE.Vector3(cyl.dir * 0.9, 1.4, -0.15);
       const inEnd = new THREE.Vector3(cyl.dir * 1.15, 0.5, -0.25);
@@ -503,7 +478,7 @@ export const Engine3DVisualizer: React.FC = () => {
     sparkPlugsRef.current = sparkPlugs;
     combustionFlashesRef.current = combustionFlashes;
 
-    // --- 7. INTAKE AIR PLENUM & REAL ROTATING THROTTLE BUTTERFLY VALVE ---
+    // --- 7. INTAKE AIR PLENUM & THROTTLE VALVE ---
     const plenumGeo = new THREE.CylinderGeometry(0.48, 0.48, 2.4, 24);
     const plenumMat = new THREE.MeshStandardMaterial({
       color: 0x0f172a,
@@ -516,7 +491,6 @@ export const Engine3DVisualizer: React.FC = () => {
     plenum.rotation.x = Math.PI / 2;
     engineGroup.add(plenum);
 
-    // Throttle Body Housing (Front of Plenum)
     const throttleBodyGeo = new THREE.CylinderGeometry(0.52, 0.52, 0.6, 24);
     const throttleBodyMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.95 });
     const throttleBody = new THREE.Mesh(throttleBodyGeo, throttleBodyMat);
@@ -524,7 +498,6 @@ export const Engine3DVisualizer: React.FC = () => {
     throttleBody.rotation.x = Math.PI / 2;
     engineGroup.add(throttleBody);
 
-    // Throttle Butterfly Valve Plate (Gold Anodized Blade)
     const valvePlateGeo = new THREE.CylinderGeometry(0.44, 0.44, 0.04, 20);
     const valvePlateMat = new THREE.MeshStandardMaterial({
       color: 0xf59e0b,
@@ -536,11 +509,10 @@ export const Engine3DVisualizer: React.FC = () => {
     engineGroup.add(throttleValve);
     throttleValveRef.current = throttleValve;
 
-    // --- 8. TURBOCHARGER SYSTEM (Garrett TBO-25 High-Flow Aero Spec) ---
+    // --- 8. TURBOCHARGER SYSTEM ---
     const turboGroup = new THREE.Group();
     turboGroup.position.set(0, 0.15, -2.6);
 
-    // Heavy Cast-Iron Turbine Housing (Twin-Scroll Hot Section)
     const turbineScrollGeo = new THREE.TorusGeometry(0.72, 0.28, 20, 36);
     const turbineMat = new THREE.MeshStandardMaterial({
       color: 0xbe123c,
@@ -553,7 +525,6 @@ export const Engine3DVisualizer: React.FC = () => {
     turboGroup.add(turbineScroll);
     turboHousingRef.current = turbineScroll;
 
-    // Aluminum Compressor Scroll Housing (Cold Section)
     const compScrollGeo = new THREE.TorusGeometry(0.68, 0.25, 20, 36);
     const compMat = new THREE.MeshStandardMaterial({
       color: 0x38bdf8,
@@ -565,7 +536,6 @@ export const Engine3DVisualizer: React.FC = () => {
     compScroll.position.x = 0.55;
     turboGroup.add(compScroll);
 
-    // Wastegate Pneumatic Actuator Canister with Linkage Rod
     const wastegateGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.6, 20);
     const wastegateMat = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.95, roughness: 0.1 });
     const wastegate = new THREE.Mesh(wastegateGeo, wastegateMat);
@@ -580,7 +550,6 @@ export const Engine3DVisualizer: React.FC = () => {
     rodMesh.rotation.z = Math.PI / 4;
     turboGroup.add(rodMesh);
 
-    // Rotating Turbine Rotor with Inconel Blades
     const rotorGeo = new THREE.CylinderGeometry(0.42, 0.42, 0.45, 18);
     const rotorMat = new THREE.MeshStandardMaterial({
       color: 0xffffff,
@@ -595,11 +564,10 @@ export const Engine3DVisualizer: React.FC = () => {
 
     engineGroup.add(turboGroup);
 
-    // --- 9. CONSTANT SPEED PROPELLER (CSP) REDUCTION GEARBOX & CARBON BLADES ---
+    // --- 9. REDUCTION GEARBOX & CARBON FIBER PROPELLER ---
     const propGroup = new THREE.Group();
     propGroup.position.set(0, 0.1, 2.3);
 
-    // Prop Reduction Gearbox (2.43:1 ratio casing with oil sight glass)
     const gearboxGeo = new THREE.CylinderGeometry(0.65, 0.82, 0.8, 32);
     const gearboxMat = new THREE.MeshStandardMaterial({
       color: 0x1e293b,
@@ -611,14 +579,12 @@ export const Engine3DVisualizer: React.FC = () => {
     gearbox.rotation.x = Math.PI / 2;
     propGroup.add(gearbox);
 
-    // Hydraulic Governor Unit (Top of Gearbox)
     const govGeo = new THREE.CylinderGeometry(0.18, 0.18, 0.45, 16);
     const govMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, metalness: 0.9 });
     const governor = new THREE.Mesh(govGeo, govMat);
     governor.position.set(0, 0.65, 0);
     propGroup.add(governor);
 
-    // Spinner Propeller Hub with 6 Drive Studs
     const spinnerGeo = new THREE.ConeGeometry(0.55, 1.1, 32);
     const spinnerMat = new THREE.MeshStandardMaterial({
       color: 0x00f0ff,
@@ -632,14 +598,12 @@ export const Engine3DVisualizer: React.FC = () => {
     spinner.rotation.x = Math.PI / 2;
     propGroup.add(spinner);
 
-    // 3 Aerodynamic Carbon Fiber Propeller Blades with High-Vis Yellow Safety Tips
     for (let b = 0; b < 3; b++) {
       const bladeAngle = (b * Math.PI * 2) / 3;
       const bladeSubGroup = new THREE.Group();
       bladeSubGroup.position.set(0, 0, 0.6);
       bladeSubGroup.rotation.z = -bladeAngle;
 
-      // Carbon Fiber Blade Body
       const bladeGeo = new THREE.BoxGeometry(0.26, 2.5, 0.07);
       const bladeMat = new THREE.MeshStandardMaterial({
         color: 0x090d16,
@@ -649,10 +613,9 @@ export const Engine3DVisualizer: React.FC = () => {
       });
       const blade = new THREE.Mesh(bladeGeo, bladeMat);
       blade.position.y = 1.3;
-      blade.rotation.y = 0.22; // Aerodynamic pitch angle
+      blade.rotation.y = 0.22;
       bladeSubGroup.add(blade);
 
-      // High-Visibility Aviation Yellow Tip
       const tipGeo = new THREE.BoxGeometry(0.27, 0.3, 0.08);
       const tipMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.3 });
       const tip = new THREE.Mesh(tipGeo, tipMat);
@@ -666,8 +629,7 @@ export const Engine3DVisualizer: React.FC = () => {
     engineGroup.add(propGroup);
     propAssemblyRef.current = propGroup;
 
-    // --- 10. REALISTIC DYNAMIC PARTICLES (Exhaust Heat Haze, Oil Circuit, Intake Air) ---
-    // Thermal Exhaust Heat Shimmer (150 Volumetric Particles)
+    // --- 10. PARTICLES ---
     const shimmerCount = 150;
     const shimmerGeo = new THREE.BufferGeometry();
     const shimmerPositions = new Float32Array(shimmerCount * 3);
@@ -688,7 +650,6 @@ export const Engine3DVisualizer: React.FC = () => {
     engineGroup.add(heatParticles);
     heatShimmerParticlesRef.current = heatParticles;
 
-    // Luminous Oil Circuit Particle Stream (220 Particles)
     const oilCount = 220;
     const oilGeo = new THREE.BufferGeometry();
     const oilPositions = new Float32Array(oilCount * 3);
@@ -709,7 +670,6 @@ export const Engine3DVisualizer: React.FC = () => {
     engineGroup.add(oilPoints);
     oilStreamRef.current = oilPoints;
 
-    // Intake Air Mass Stream (120 Particles)
     const airCount = 120;
     const airGeo = new THREE.BufferGeometry();
     const airPositions = new Float32Array(airCount * 3);
@@ -730,7 +690,7 @@ export const Engine3DVisualizer: React.FC = () => {
     engineGroup.add(airPoints);
     airIntakeParticlesRef.current = airPoints;
 
-    // --- 11. MOUSE ORBIT CONTROLS & RAYCASTER PART INSPECTION ---
+    // --- 11. MOUSE & TOUCH ORBIT CONTROLS ---
     let isDragging = false;
     let prevMousePos = { x: 0, y: 0 };
     const raycaster = new THREE.Raycaster();
@@ -739,6 +699,13 @@ export const Engine3DVisualizer: React.FC = () => {
     const onMouseDown = (e: MouseEvent) => {
       isDragging = true;
       prevMousePos = { x: e.clientX, y: e.clientY };
+    };
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 1) {
+        isDragging = true;
+        prevMousePos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
     };
 
     const onMouseMove = (e: MouseEvent) => {
@@ -751,7 +718,6 @@ export const Engine3DVisualizer: React.FC = () => {
         prevMousePos = { x: e.clientX, y: e.clientY };
       }
 
-      // Hover Raycast Part Inspection
       const rect = container.getBoundingClientRect();
       mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
@@ -775,7 +741,22 @@ export const Engine3DVisualizer: React.FC = () => {
       }
     };
 
+    const onTouchMove = (e: TouchEvent) => {
+      if (isDragging && engineGroupRef.current && e.touches.length === 1) {
+        const deltaX = e.touches[0].clientX - prevMousePos.x;
+        const deltaY = e.touches[0].clientY - prevMousePos.y;
+
+        engineGroupRef.current.rotation.y += deltaX * 0.01;
+        engineGroupRef.current.rotation.x += deltaY * 0.01;
+        prevMousePos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+    };
+
     const onMouseUp = () => {
+      isDragging = false;
+    };
+
+    const onTouchEnd = () => {
       isDragging = false;
     };
 
@@ -789,9 +770,12 @@ export const Engine3DVisualizer: React.FC = () => {
     container.addEventListener('mousedown', onMouseDown);
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
+    container.addEventListener('touchstart', onTouchStart, { passive: true });
+    window.addEventListener('touchmove', onTouchMove, { passive: true });
+    window.addEventListener('touchend', onTouchEnd, { passive: true });
     container.addEventListener('wheel', onWheel, { passive: false });
 
-    // --- 12. 60 FPS ADVANCED RENDERING & VARIABLE SIMULATION LOOP ---
+    // --- 12. 60 FPS ANIMATION LOOP ---
     let animationFrameId: number;
     const clock = new THREE.Clock();
 
@@ -813,13 +797,11 @@ export const Engine3DVisualizer: React.FC = () => {
       const vibFaultActive = faultsState.find((f) => f.id === 'ABNORMAL_VIBRATION' && f.enabled);
       const instabActive = faultsState.find((f) => f.id === 'COMBUSTION_INSTABILITY' && f.enabled);
 
-      // 12.1 Auto-Rotation & Physical Mount Vibration
       if (engineGroupRef.current) {
         if (shouldRotate && !isDragging) {
           engineGroupRef.current.rotation.y += delta * 0.3;
         }
 
-        // Mechanical Engine Mount Shudder
         if (telemetry.vibrationRms > 3.0 || vibFaultActive || misfireActive || instabActive) {
           const vibIntensity = (telemetry.vibrationRms / 8.0) * 0.035;
           engineGroupRef.current.position.x = (Math.random() - 0.5) * vibIntensity;
@@ -828,18 +810,15 @@ export const Engine3DVisualizer: React.FC = () => {
           engineGroupRef.current.position.set(0, 0, 0);
         }
 
-        // Exploded Cutaway Expansion
         const targetScale = mode === 'XRAY_EXPLODED' ? 1.32 : 1.0;
         engineGroupRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.06);
       }
 
-      // 12.2 Throttle Butterfly Valve Plate Rotation (Matches Throttle Command 0-100% exactly!)
       if (throttleValveRef.current) {
         const targetAngle = (1 - throttleVal / 100) * (Math.PI / 2);
         throttleValveRef.current.rotation.x = targetAngle;
       }
 
-      // 12.3 Propeller Assembly & Turbocharger Spool Rotation (RPM Synced)
       const radPerSec = (telemetry.rpm / 60) * Math.PI * 2;
       if (propAssemblyRef.current) {
         propAssemblyRef.current.rotation.z += radPerSec * delta * 0.16;
@@ -849,7 +828,6 @@ export const Engine3DVisualizer: React.FC = () => {
         turboRotorRef.current.rotation.x += radPerSec * delta * 0.7 * turboBoostFactor;
       }
 
-      // 12.4 Piston Strokes, Con-Rods & Combustion Spark Flashes
       const strokeFreq = (telemetry.rpm / 60) * Math.PI * 2 * 0.12;
       pistonsRef.current.forEach((piston, idx) => {
         const phase = (idx * Math.PI) / 2;
@@ -875,7 +853,6 @@ export const Engine3DVisualizer: React.FC = () => {
         }
       });
 
-      // 12.5 Real-Time Cylinder Head Thermal Shaders
       cylinderHeadsRef.current.forEach((head, idx) => {
         const headMat = head.material as THREE.MeshStandardMaterial;
         const cylTele = telemetry.cylinders[idx];
@@ -906,7 +883,6 @@ export const Engine3DVisualizer: React.FC = () => {
           headMat.emissive.setHex(isCylMisfiring ? 0x001122 : 0x003344);
           headMat.emissiveIntensity = 0.6;
         } else {
-          // Realistic Solid Aircraft Aluminum
           headMat.wireframe = false;
           headMat.color.setHex(0x475569);
           headMat.emissive.setHex(0x000000);
@@ -914,7 +890,6 @@ export const Engine3DVisualizer: React.FC = () => {
         }
       });
 
-      // 12.6 Exhaust Headers Glow (EGT Reaction)
       exhaustRunnersRef.current.forEach((runner, idx) => {
         const exMat = runner.material as THREE.MeshStandardMaterial;
         const isCylMisfiring = misfireActive && idx === 2;
@@ -931,14 +906,12 @@ export const Engine3DVisualizer: React.FC = () => {
         }
       });
 
-      // 12.7 Turbocharger Heat Glow
       if (turboHousingRef.current) {
         const turboMat = turboHousingRef.current.material as THREE.MeshStandardMaterial;
         const turboGlow = Math.min(1.3, 0.45 + (throttleVal / 100) * 0.8 + (telemetry.egt > 820 ? 0.35 : 0));
         turboMat.emissiveIntensity = turboGlow;
       }
 
-      // 12.8 Heat Shimmer & Exhaust Plume Velocity
       if (heatShimmerParticlesRef.current) {
         const posAttr = heatShimmerParticlesRef.current.geometry.attributes.position as THREE.BufferAttribute;
         const positions = posAttr.array as Float32Array;
@@ -955,7 +928,6 @@ export const Engine3DVisualizer: React.FC = () => {
         posAttr.needsUpdate = true;
       }
 
-      // 12.9 Oil Circuit Flow Dynamics (Lubrication Loss reaction)
       if (oilStreamRef.current && drawOil) {
         const posAttr = oilStreamRef.current.geometry.attributes.position as THREE.BufferAttribute;
         const positions = posAttr.array as Float32Array;
@@ -974,7 +946,6 @@ export const Engine3DVisualizer: React.FC = () => {
         oilMat.opacity = lubeLossActive ? 0.35 : 0.85;
       }
 
-      // 12.10 Intake Airflow Particle Streams (Throttle Reaction)
       if (airIntakeParticlesRef.current) {
         const posAttr = airIntakeParticlesRef.current.geometry.attributes.position as THREE.BufferAttribute;
         const positions = posAttr.array as Float32Array;
@@ -1011,6 +982,9 @@ export const Engine3DVisualizer: React.FC = () => {
       container.removeEventListener('mousedown', onMouseDown);
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
+      container.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onTouchEnd);
       container.removeEventListener('wheel', onWheel);
       renderer.dispose();
     };
@@ -1047,189 +1021,179 @@ export const Engine3DVisualizer: React.FC = () => {
   const lubeFault = faults.find((f) => f.id === 'LUBRICATION_LOSS' && f.enabled);
 
   return (
-    <div className="bg-aerospace-900/90 rounded-xl border border-slate-800 p-4 flex flex-col gap-3 shadow-xl relative overflow-hidden">
+    <div className="bg-aerospace-900/90 rounded-xl border border-slate-800 p-2.5 sm:p-4 flex flex-col gap-2.5 sm:gap-3 shadow-xl relative overflow-hidden">
       {/* 3D Viewport Top Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-2 z-10">
-        <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-lg bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 glow-cyan">
-            <Rotate3d className="w-4 h-4" />
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className="p-1 sm:p-1.5 rounded-lg bg-cyan-500/20 text-cyan-400 border border-cyan-500/40 glow-cyan">
+            <Rotate3d className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </div>
           <div>
-            <h2 className="font-tech text-xs font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
-              <span>Rotax 914 Turbocharged Aero-Piston 3D CAD Twin</span>
-              <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-cyan-950 text-cyan-300 border border-cyan-800/40 font-normal">
-                PBR Aerospace Shaders
+            <h2 className="font-tech text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-200 flex items-center gap-1.5 sm:gap-2">
+              <span className="truncate">Rotax 914 Turbocharged Twin</span>
+              <span className="hidden sm:inline text-[9px] font-mono px-1.5 py-0.2 rounded bg-cyan-950 text-cyan-300 border border-cyan-800/40 font-normal">
+                PBR Shaders
               </span>
             </h2>
           </div>
         </div>
 
-        {/* View Mode Switcher */}
-        <div className="flex items-center gap-1 bg-aerospace-950 p-1 rounded-lg border border-slate-800 text-xs font-mono">
+        {/* View Mode Switcher (Scrollable on small mobile screens) */}
+        <div className="flex items-center gap-1 bg-aerospace-950 p-1 rounded-lg border border-slate-800 text-[10px] sm:text-xs font-mono overflow-x-auto max-w-full">
           <button
             onClick={() => setViewMode('REALISTIC')}
-            className={`px-2.5 py-1 rounded transition-all flex items-center gap-1.5 ${
+            className={`px-2 sm:px-2.5 py-1 rounded transition-all shrink-0 flex items-center gap-1 ${
               viewMode === 'REALISTIC'
                 ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40 glow-cyan'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            <Eye className="w-3.5 h-3.5 text-cyan-300" />
-            <span>Aircraft Metallic</span>
+            <Eye className="w-3 h-3 text-cyan-300" />
+            <span>Alloy</span>
           </button>
           <button
             onClick={() => setViewMode('THERMAL')}
-            className={`px-2.5 py-1 rounded transition-all flex items-center gap-1.5 ${
+            className={`px-2 sm:px-2.5 py-1 rounded transition-all shrink-0 flex items-center gap-1 ${
               viewMode === 'THERMAL'
                 ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40 glow-cyan'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            <Flame className="w-3.5 h-3.5 text-orange-400" />
-            <span>Thermal IR</span>
+            <Flame className="w-3 h-3 text-orange-400" />
+            <span>Thermal</span>
           </button>
           <button
             onClick={() => setViewMode('XRAY_EXPLODED')}
-            className={`px-2.5 py-1 rounded transition-all flex items-center gap-1.5 ${
+            className={`px-2 sm:px-2.5 py-1 rounded transition-all shrink-0 flex items-center gap-1 ${
               viewMode === 'XRAY_EXPLODED'
                 ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            <Maximize className="w-3.5 h-3.5 text-purple-400" />
-            <span>Exploded Cutaway</span>
+            <Maximize className="w-3 h-3 text-purple-400" />
+            <span>Exploded</span>
           </button>
           <button
             onClick={() => setViewMode('AERO_FLOW')}
-            className={`px-2.5 py-1 rounded transition-all flex items-center gap-1.5 ${
+            className={`px-2 sm:px-2.5 py-1 rounded transition-all shrink-0 flex items-center gap-1 ${
               viewMode === 'AERO_FLOW'
                 ? 'bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/40'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
-            <Wind className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Air/Exhaust Stream</span>
+            <Wind className="w-3 h-3 text-cyan-400" />
+            <span>Flow</span>
           </button>
         </div>
       </div>
 
       {/* 3D WebGL Canvas Container */}
-      <div className="relative w-full h-84 sm:h-[440px] rounded-xl bg-[#02050a] border border-slate-800/80 overflow-hidden group">
-        <div ref={containerRef} className="w-full h-full cursor-grab active:cursor-grabbing" />
+      <div className="relative w-full h-72 sm:h-96 lg:h-[440px] rounded-xl bg-[#02050a] border border-slate-800/80 overflow-hidden group">
+        <div ref={containerRef} className="w-full h-full cursor-grab active:cursor-grabbing touch-none" />
 
         {/* Live Variable Feedback HUD Overlay */}
-        <div className="absolute top-3 left-3 flex flex-col gap-1.5 pointer-events-none z-10">
-          <div className="px-2.5 py-1.5 rounded-lg bg-aerospace-950/90 backdrop-blur-md border border-slate-700/60 text-[11px] font-mono text-slate-200 flex flex-wrap items-center gap-2.5">
-            <span className="flex items-center gap-1.5">
-              <Zap className="w-3.5 h-3.5 text-cyan-400" />
-              <span>THROTTLE: <strong className="text-cyan-300">{throttle}%</strong> (VALVE {Math.round(throttle)}°)</span>
+        <div className="absolute top-2 sm:top-3 left-2 sm:left-3 flex flex-col gap-1 sm:gap-1.5 pointer-events-none z-10 max-w-[90%]">
+          <div className="px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg bg-aerospace-950/90 backdrop-blur-md border border-slate-700/60 text-[9px] sm:text-[11px] font-mono text-slate-200 flex flex-wrap items-center gap-1.5 sm:gap-2.5">
+            <span className="flex items-center gap-1">
+              <Zap className="w-3 h-3 text-cyan-400" />
+              <span>THR: <strong className="text-cyan-300">{throttle}%</strong></span>
             </span>
             <span className="text-slate-600">|</span>
-            <span className="flex items-center gap-1.5">
-              <Activity className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="flex items-center gap-1">
+              <Activity className="w-3 h-3 text-emerald-400" />
               <span>RPM: <strong className="text-emerald-300">{t.rpm.toFixed(0)}</strong></span>
             </span>
             <span className="text-slate-600">|</span>
-            <span className="flex items-center gap-1.5">
-              <Thermometer className="w-3.5 h-3.5 text-amber-400" />
-              <span>AVG CHT: <strong className={t.cht > 125 ? 'text-rose-400' : 'text-amber-300'}>{t.cht.toFixed(1)}°C</strong></span>
+            <span className="flex items-center gap-1">
+              <Thermometer className="w-3 h-3 text-amber-400" />
+              <span>CHT: <strong className={t.cht > 125 ? 'text-rose-400' : 'text-amber-300'}>{t.cht.toFixed(0)}°C</strong></span>
             </span>
           </div>
 
-          {/* Component Inspection Badge */}
           {inspectedPart && (
-            <div className="px-2.5 py-1 rounded bg-aerospace-900/85 backdrop-blur-md border border-cyan-500/40 text-[10px] font-mono text-cyan-300 flex items-center gap-1.5">
-              <Info className="w-3.5 h-3.5 text-cyan-400" />
-              <span>INSPECTION: <strong>{inspectedPart}</strong></span>
+            <div className="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded bg-aerospace-900/85 backdrop-blur-md border border-cyan-500/40 text-[8px] sm:text-[10px] font-mono text-cyan-300 flex items-center gap-1 truncate max-w-full">
+              <Info className="w-3 h-3 text-cyan-400 shrink-0" />
+              <span className="truncate">INSPECT: <strong>{inspectedPart}</strong></span>
             </div>
           )}
 
-          {/* Real-Time Fault Floating Badges */}
           {misfireFault && (
-            <div className="px-3 py-1 rounded-lg bg-rose-950/90 backdrop-blur-md border border-rose-500 text-[11px] font-mono text-rose-200 flex items-center gap-2 glow-rose animate-bounce">
-              <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
-              <span>⚠️ CYLINDER #3 QUENCHED — SPARK/COMBUSTION HALTED (EGT {t.cylinders[2]?.egt.toFixed(0)}°C)</span>
+            <div className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg bg-rose-950/90 backdrop-blur-md border border-rose-500 text-[9px] sm:text-[11px] font-mono text-rose-200 flex items-center gap-1.5 glow-rose animate-bounce">
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping shrink-0"></span>
+              <span className="truncate">⚠️ CYL #3 QUENCHED (EGT {t.cylinders[2]?.egt.toFixed(0)}°C)</span>
             </div>
           )}
 
           {lubeFault && (
-            <div className="px-3 py-1 rounded-lg bg-rose-950/90 backdrop-blur-md border border-rose-500 text-[11px] font-mono text-rose-200 flex items-center gap-2 glow-rose animate-pulse">
-              <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
-              <span>💧 HYDRODYNAMIC OIL FILM BREAKDOWN ({t.oilPressure.toFixed(2)} bar — FRICTION HEAT RAMP)</span>
+            <div className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg bg-rose-950/90 backdrop-blur-md border border-rose-500 text-[9px] sm:text-[11px] font-mono text-rose-200 flex items-center gap-1.5 glow-rose animate-pulse">
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping shrink-0"></span>
+              <span className="truncate">💧 OIL FILM BREAKDOWN ({t.oilPressure.toFixed(2)} bar)</span>
             </div>
           )}
         </div>
 
         {/* Bottom Floating 3D Controls */}
-        <div className="absolute bottom-3 left-3 right-3 flex flex-wrap items-center justify-between gap-2 pointer-events-auto z-10">
-          {/* Camera Angles */}
-          <div className="flex items-center gap-1 bg-aerospace-950/90 backdrop-blur-md p-1 rounded-lg border border-slate-700/60 text-[10px] font-mono">
-            <Camera className="w-3.5 h-3.5 text-slate-400 ml-1" />
+        <div className="absolute bottom-2 sm:bottom-3 left-2 sm:left-3 right-2 sm:right-3 flex flex-wrap items-center justify-between gap-1.5 pointer-events-auto z-10">
+          <div className="flex items-center gap-1 bg-aerospace-950/90 backdrop-blur-md p-0.5 sm:p-1 rounded-lg border border-slate-700/60 text-[9px] sm:text-[10px] font-mono">
+            <Camera className="w-3 h-3 text-slate-400 ml-0.5" />
             <button
               onClick={() => setCameraAngle('ISO')}
-              className={`px-2 py-0.5 rounded transition-colors ${cameraPreset === 'ISO' ? 'bg-cyan-500/30 text-cyan-200 font-bold' : 'text-slate-400 hover:text-slate-200'}`}
+              className={`px-1.5 sm:px-2 py-0.5 rounded transition-colors ${cameraPreset === 'ISO' ? 'bg-cyan-500/30 text-cyan-200 font-bold' : 'text-slate-400'}`}
             >
-              Isometric
+              ISO
             </button>
             <button
               onClick={() => setCameraAngle('CYLINDERS')}
-              className={`px-2 py-0.5 rounded transition-colors ${cameraPreset === 'CYLINDERS' ? 'bg-cyan-500/30 text-cyan-200 font-bold' : 'text-slate-400 hover:text-slate-200'}`}
+              className={`px-1.5 sm:px-2 py-0.5 rounded transition-colors ${cameraPreset === 'CYLINDERS' ? 'bg-cyan-500/30 text-cyan-200 font-bold' : 'text-slate-400'}`}
             >
-              Cylinder Bank
+              Cyl
             </button>
             <button
               onClick={() => setCameraAngle('TURBO')}
-              className={`px-2 py-0.5 rounded transition-colors ${cameraPreset === 'TURBO' ? 'bg-cyan-500/30 text-cyan-200 font-bold' : 'text-slate-400 hover:text-slate-200'}`}
+              className={`px-1.5 sm:px-2 py-0.5 rounded transition-colors ${cameraPreset === 'TURBO' ? 'bg-cyan-500/30 text-cyan-200 font-bold' : 'text-slate-400'}`}
             >
-              Turbocharger
+              Turbo
             </button>
             <button
               onClick={() => setCameraAngle('TOP')}
-              className={`px-2 py-0.5 rounded transition-colors ${cameraPreset === 'TOP' ? 'bg-cyan-500/30 text-cyan-200 font-bold' : 'text-slate-400 hover:text-slate-200'}`}
+              className={`px-1.5 sm:px-2 py-0.5 rounded transition-colors ${cameraPreset === 'TOP' ? 'bg-cyan-500/30 text-cyan-200 font-bold' : 'text-slate-400'}`}
             >
-              Top-Down
+              Top
             </button>
           </div>
 
-          {/* Action Toggles */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             <button
               onClick={() => setShowCombustion(!showCombustion)}
-              className={`px-2 py-1 rounded bg-aerospace-950/90 backdrop-blur-md border text-[10px] font-mono flex items-center gap-1 transition-all ${
-                showCombustion
-                  ? 'border-orange-500/60 text-orange-300'
-                  : 'border-slate-700 text-slate-500'
+              className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded bg-aerospace-950/90 backdrop-blur-md border text-[9px] sm:text-[10px] font-mono flex items-center gap-1 transition-all ${
+                showCombustion ? 'border-orange-500/60 text-orange-300' : 'border-slate-700 text-slate-500'
               }`}
-              title="Toggle Spark Ignition Combustion Flashes"
+              title="Toggle Combustion Spark Flashes"
             >
               <Flame className="w-3 h-3" />
-              <span>Spark Ignition</span>
+              <span className="hidden sm:inline">Spark</span>
             </button>
 
             <button
               onClick={() => setShowOilFlow(!showOilFlow)}
-              className={`px-2 py-1 rounded bg-aerospace-950/90 backdrop-blur-md border text-[10px] font-mono flex items-center gap-1 transition-all ${
-                showOilFlow
-                  ? 'border-blue-500/60 text-blue-300'
-                  : 'border-slate-700 text-slate-500'
+              className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded bg-aerospace-950/90 backdrop-blur-md border text-[9px] sm:text-[10px] font-mono flex items-center gap-1 transition-all ${
+                showOilFlow ? 'border-blue-500/60 text-blue-300' : 'border-slate-700 text-slate-500'
               }`}
-              title="Toggle Luminous Oil Gallery Stream"
+              title="Toggle Oil Gallery Stream"
             >
               <Droplets className="w-3 h-3" />
-              <span>Oil Stream</span>
+              <span className="hidden sm:inline">Oil</span>
             </button>
 
             <button
               onClick={() => setAutoRotate(!autoRotate)}
-              className={`px-2 py-1 rounded bg-aerospace-950/90 backdrop-blur-md border text-[10px] font-mono flex items-center gap-1 transition-all ${
-                autoRotate
-                  ? 'border-cyan-500/60 text-cyan-300 glow-cyan'
-                  : 'border-slate-700 text-slate-500'
+              className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded bg-aerospace-950/90 backdrop-blur-md border text-[9px] sm:text-[10px] font-mono flex items-center gap-1 transition-all ${
+                autoRotate ? 'border-cyan-500/60 text-cyan-300 glow-cyan' : 'border-slate-700 text-slate-500'
               }`}
               title="Toggle 360° Auto-Rotation"
             >
               {autoRotate ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
-              <span>{autoRotate ? 'Orbiting' : 'Static'}</span>
+              <span>{autoRotate ? 'Spin' : 'Static'}</span>
             </button>
           </div>
         </div>

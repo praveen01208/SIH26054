@@ -1,146 +1,98 @@
 import React from 'react';
 import { useTwinStore } from '../store/useTwinStore';
-import { X, GitCompare, RefreshCw } from 'lucide-react';
+import { NOMINAL_BASELINE } from '../simulation/defaultState';
+import { X, GitCompare, CheckCircle, AlertTriangle, ShieldCheck } from 'lucide-react';
 
 export const BaselineComparisonModal: React.FC = () => {
-  const {
-    showBaselineModal,
-    setShowBaselineModal,
-    currentTelemetry,
-    baselineProfile,
-    captureCurrentAsBaseline,
-  } = useTwinStore();
+  const { showBaselineModal, setShowBaselineModal, currentTelemetry } = useTwinStore();
+  const t = currentTelemetry;
+  const b = NOMINAL_BASELINE;
 
   if (!showBaselineModal) return null;
 
-  const t = currentTelemetry;
-  const b = baselineProfile;
-
   const comparisonRows = [
-    {
-      name: 'Engine RPM',
-      unit: 'RPM',
-      baseline: b.rpm.toFixed(0),
-      current: t.rpm.toFixed(0),
-      diff: ((t.rpm - b.rpm) / b.rpm) * 100,
-    },
-    {
-      name: 'Cylinder Head Temp (CHT)',
-      unit: '°C',
-      baseline: b.cht.toFixed(1),
-      current: t.cht.toFixed(1),
-      diff: ((t.cht - b.cht) / b.cht) * 100,
-    },
-    {
-      name: 'Exhaust Gas Temp (EGT)',
-      unit: '°C',
-      baseline: b.egt.toFixed(0),
-      current: t.egt.toFixed(0),
-      diff: ((t.egt - b.egt) / b.egt) * 100,
-    },
-    {
-      name: 'Oil Pressure',
-      unit: 'bar',
-      baseline: b.oilPressure.toFixed(2),
-      current: t.oilPressure.toFixed(2),
-      diff: ((t.oilPressure - b.oilPressure) / b.oilPressure) * 100,
-    },
-    {
-      name: 'Oil Temperature',
-      unit: '°C',
-      baseline: b.oilTemp.toFixed(1),
-      current: t.oilTemp.toFixed(1),
-      diff: ((t.oilTemp - b.oilTemp) / b.oilTemp) * 100,
-    },
-    {
-      name: 'Fuel Flow Rate',
-      unit: 'L/h',
-      baseline: b.fuelFlow.toFixed(1),
-      current: t.fuelFlow.toFixed(1),
-      diff: ((t.fuelFlow - b.fuelFlow) / b.fuelFlow) * 100,
-    },
-    {
-      name: 'Vibration RMS',
-      unit: 'mm/s',
-      baseline: b.vibrationRms.toFixed(2),
-      current: t.vibrationRms.toFixed(2),
-      diff: ((t.vibrationRms - b.vibrationRms) / b.vibrationRms) * 100,
-    },
-    {
-      name: 'Bus Voltage',
-      unit: 'V',
-      baseline: b.batteryVoltage.toFixed(1),
-      current: t.batteryVoltage.toFixed(1),
-      diff: ((t.batteryVoltage - b.batteryVoltage) / b.batteryVoltage) * 100,
-    },
+    { label: 'Engine Speed', unit: 'RPM', live: t.rpm, base: b.rpm, delta: t.rpm - b.rpm, tol: 150 },
+    { label: 'Cylinder Head Temp (CHT)', unit: '°C', live: t.cht, base: b.cht, delta: t.cht - b.cht, tol: 8 },
+    { label: 'Exhaust Gas Temp (EGT)', unit: '°C', live: t.egt, base: b.egt, delta: t.egt - b.egt, tol: 35 },
+    { label: 'Oil Pressure', unit: 'bar', live: t.oilPressure, base: b.oilPressure, delta: t.oilPressure - b.oilPressure, tol: 0.4 },
+    { label: 'Oil Temperature', unit: '°C', live: t.oilTemp, base: b.oilTemp, delta: t.oilTemp - b.oilTemp, tol: 6 },
+    { label: 'Fuel Flow Rate', unit: 'L/h', live: t.fuelFlow, base: b.fuelFlow, delta: t.fuelFlow - b.fuelFlow, tol: 2.5 },
+    { label: 'Vibration RMS', unit: 'mm/s', live: t.vibrationRms, base: b.vibrationRms, delta: t.vibrationRms - b.vibrationRms, tol: 1.0 },
+    { label: '28V Bus Voltage', unit: 'V', live: t.batteryVoltage, base: b.batteryVoltage, delta: t.batteryVoltage - b.batteryVoltage, tol: 1.2 },
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div className="bg-aerospace-900 border border-cyan-500/50 rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl glow-cyan">
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 animate-fade-in">
+      <div className="bg-aerospace-950 border border-slate-700 rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
         {/* Modal Header */}
-        <div className="bg-aerospace-950 px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+        <div className="p-3 sm:p-4 border-b border-slate-800 flex items-center justify-between bg-aerospace-900/60">
           <div className="flex items-center gap-2">
-            <GitCompare className="w-5 h-5 text-cyan-400" />
-            <h2 className="font-tech text-base font-bold uppercase tracking-wider text-slate-100">
-              Live Session vs Certified Baseline Comparison
-            </h2>
+            <div className="p-1.5 rounded-lg bg-cyan-500/20 text-cyan-400 border border-cyan-500/40">
+              <GitCompare className="w-4 h-4 sm:w-5 sm:h-5" />
+            </div>
+            <div>
+              <h2 className="font-tech text-sm sm:text-base font-bold uppercase tracking-wider text-slate-100">
+                Baseline Deviation Analysis (ISO 13374)
+              </h2>
+              <p className="text-[10px] sm:text-xs text-slate-400 font-mono">
+                Certified Factory Baseline vs Live Flight Telemetry
+              </p>
+            </div>
           </div>
+
           <button
             onClick={() => setShowBaselineModal(false)}
-            className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-slate-200"
+            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
         </div>
 
-        {/* Modal Content */}
-        <div className="p-6 flex flex-col gap-4">
-          <p className="text-xs font-mono text-slate-300">
-            Real-time digital twin state deviation matrix compared against the calibrated nominal aero-piston baseline profile.
-          </p>
+        {/* Modal Body with Horizontal Scroll for Mobile */}
+        <div className="p-3 sm:p-4 overflow-y-auto flex-1 flex flex-col gap-3 sm:gap-4">
+          <div className="bg-aerospace-900/60 p-2.5 sm:p-3 rounded-xl border border-slate-800 text-[11px] sm:text-xs font-mono text-slate-300 flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-cyan-400 shrink-0" />
+            <span>
+              Values within green tolerance bounds meet certified airworthiness standards. Deviations exceeding tolerance trigger physics residual flags.
+            </span>
+          </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs font-mono">
+          <div className="overflow-x-auto border border-slate-800 rounded-xl">
+            <table className="w-full text-left font-mono text-xs border-collapse min-w-[500px]">
               <thead>
-                <tr className="border-b border-slate-800 text-slate-400 bg-aerospace-950/60">
-                  <th className="py-2.5 px-3">State Channel</th>
-                  <th className="py-2.5 px-3">Baseline Profile</th>
-                  <th className="py-2.5 px-3">Live Telemetry</th>
-                  <th className="py-2.5 px-3">Deviation (Δ%)</th>
-                  <th className="py-2.5 px-3">Status</th>
+                <tr className="bg-aerospace-900 border-b border-slate-800 text-slate-400 text-[10px] uppercase">
+                  <th className="p-2.5 sm:p-3">Sensor Parameter</th>
+                  <th className="p-2.5 sm:p-3">Live Telemetry</th>
+                  <th className="p-2.5 sm:p-3">Nominal Baseline</th>
+                  <th className="p-2.5 sm:p-3">Delta (Live - Base)</th>
+                  <th className="p-2.5 sm:p-3 text-center">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60">
-                {comparisonRows.map((row) => {
-                  const absDiff = Math.abs(row.diff);
-                  const isSevere = absDiff > 25;
-                  const isModerate = absDiff > 12;
-
+              <tbody className="divide-y divide-slate-850">
+                {comparisonRows.map((row, idx) => {
+                  const isExceeded = Math.abs(row.delta) > row.tol;
                   return (
-                    <tr key={row.name} className="hover:bg-slate-800/30 transition-colors">
-                      <td className="py-2.5 px-3 font-semibold text-slate-200">{row.name}</td>
-                      <td className="py-2.5 px-3 text-slate-400">
-                        {row.baseline} {row.unit}
+                    <tr key={idx} className="hover:bg-slate-900/40 transition-colors">
+                      <td className="p-2.5 sm:p-3 text-slate-200 font-semibold">{row.label}</td>
+                      <td className="p-2.5 sm:p-3 text-white font-bold">
+                        {row.live.toFixed(1)} {row.unit}
                       </td>
-                      <td className="py-2.5 px-3 font-bold text-slate-100">
-                        {row.current} {row.unit}
+                      <td className="p-2.5 sm:p-3 text-slate-400">
+                        {row.base.toFixed(1)} {row.unit}
                       </td>
-                      <td className={`py-2.5 px-3 font-bold ${isSevere ? 'text-rose-400' : isModerate ? 'text-amber-400' : 'text-emerald-400'}`}>
-                        {row.diff > 0 ? `+${row.diff.toFixed(1)}%` : `${row.diff.toFixed(1)}%`}
+                      <td className={`p-2.5 sm:p-3 font-bold ${isExceeded ? 'text-rose-400' : 'text-emerald-400'}`}>
+                        {row.delta > 0 ? `+${row.delta.toFixed(1)}` : row.delta.toFixed(1)} {row.unit}
                       </td>
-                      <td className="py-2.5 px-3">
-                        {isSevere ? (
-                          <span className="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[10px] font-bold">
-                            ANOMALOUS
-                          </span>
-                        ) : isModerate ? (
-                          <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px]">
-                            MARGINAL
+                      <td className="p-2.5 sm:p-3 text-center">
+                        {isExceeded ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] bg-rose-500/20 text-rose-300 border border-rose-500/40 font-bold">
+                            <AlertTriangle className="w-3 h-3" />
+                            <span>DEVIANT</span>
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px]">
-                            NOMINAL
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold">
+                            <CheckCircle className="w-3 h-3" />
+                            <span>NOMINAL</span>
                           </span>
                         )}
                       </td>
@@ -150,23 +102,16 @@ export const BaselineComparisonModal: React.FC = () => {
               </tbody>
             </table>
           </div>
+        </div>
 
-          <div className="flex items-center justify-between pt-3 border-t border-slate-800">
-            <button
-              onClick={captureCurrentAsBaseline}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-mono text-cyan-300 border border-slate-700"
-            >
-              <RefreshCw className="w-4 h-4" />
-              <span>Capture Current State as New Baseline</span>
-            </button>
-
-            <button
-              onClick={() => setShowBaselineModal(false)}
-              className="px-4 py-2 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-mono font-bold text-xs shadow-lg glow-cyan"
-            >
-              Close Overlay
-            </button>
-          </div>
+        {/* Modal Footer */}
+        <div className="p-3 sm:p-4 border-t border-slate-800 bg-aerospace-900/40 flex justify-end">
+          <button
+            onClick={() => setShowBaselineModal(false)}
+            className="px-4 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-mono font-bold text-xs transition-colors"
+          >
+            Close Baseline Viewer
+          </button>
         </div>
       </div>
     </div>
